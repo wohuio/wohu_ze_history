@@ -84,9 +84,34 @@
 export default {
   props: {
     content: { type: Object, required: true },
-    uid: { type: String, default: null },
+    uid: { type: String, required: true },
   },
   emits: ['update:content', 'trigger-event'],
+  setup(props) {
+    // Internal variables for WeWeb
+    const { value: filteredDateFromVar, setValue: setFilteredDateFromVar } =
+      window.wwLib.wwVariable.useComponentVariable({
+        uid: props.uid,
+        name: 'filteredDateFrom',
+        type: 'number',
+        defaultValue: null,
+      });
+
+    const { value: filteredDateToVar, setValue: setFilteredDateToVar } =
+      window.wwLib.wwVariable.useComponentVariable({
+        uid: props.uid,
+        name: 'filteredDateTo',
+        type: 'number',
+        defaultValue: null,
+      });
+
+    return {
+      filteredDateFromVar,
+      setFilteredDateFromVar,
+      filteredDateToVar,
+      setFilteredDateToVar,
+    };
+  },
   data() {
     return {
       entries: [],
@@ -129,11 +154,11 @@ export default {
     },
     localDateFrom(newVal) {
       const timestamp = this.dateInputToTimestamp(newVal);
-      this.updateContentProperty('filteredDateFromOutput', timestamp);
+      this.setFilteredDateFromVar(timestamp);
     },
     localDateTo(newVal) {
       const timestamp = this.dateInputToTimestamp(newVal);
-      this.updateContentProperty('filteredDateToOutput', timestamp);
+      this.setFilteredDateToVar(timestamp);
     },
   },
   mounted() {
@@ -144,12 +169,6 @@ export default {
     }
   },
   methods: {
-    updateContentProperty(key, value) {
-      this.$emit('update:content', {
-        ...this.content,
-        [key]: value,
-      });
-    },
     async loadData() {
       this.loading = true;
       this.error = null;

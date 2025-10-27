@@ -52,26 +52,5 @@ export default {
       defaultValue: true,
       section: "settings",
     },
-    // Output properties (set by component)
-    filteredDateFromOutput: {
-      label: {
-        en: "Selected Date From",
-        de: "Ausgewähltes Von-Datum",
-      },
-      type: "Number",
-      defaultValue: null,
-      bindable: true,
-      section: "settings",
-    },
-    filteredDateToOutput: {
-      label: {
-        en: "Selected Date To",
-        de: "Ausgewähltes Bis-Datum",
-      },
-      type: "Number",
-      defaultValue: null,
-      bindable: true,
-      section: "settings",
-    },
   },
 };
