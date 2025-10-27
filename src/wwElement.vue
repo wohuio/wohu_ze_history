@@ -21,11 +21,11 @@
           />
         </div>
         <div class="filter-item filter-actions">
-          <button @click="applyFilter" class="filter-button" :disabled="loading">
+          <button @click="applyFilter" class="filter-button" :disabled="loading || !content.userId">
             <span class="filter-icon">🔍</span>
             Filtern
           </button>
-          <button @click="clearFilter" class="clear-button">
+          <button @click="clearFilter" class="clear-button" :disabled="!content.userId">
             ✕ Reset
           </button>
         </div>
@@ -75,7 +75,8 @@
 
     <!-- Empty State -->
     <div v-else class="empty-state">
-      <p>Keine Einträge gefunden. Versuche andere Filter.</p>
+      <p v-if="!content.userId">Bitte User ID in den Properties binden.</p>
+      <p v-else>Keine Einträge gefunden. Versuche andere Filter.</p>
     </div>
   </div>
 </template>
@@ -162,24 +163,28 @@ export default {
     },
   },
   mounted() {
-    // Only load if at least one parameter is set
-    const hasParams = this.content.userId || this.content.dateFrom || this.content.dateTo;
-    if (hasParams) {
+    // Only load if user_id is set (required by API)
+    if (this.content.userId) {
       this.loadData();
     }
   },
   methods: {
     async loadData() {
+      // Don't load without user_id (API requirement)
+      if (!this.content.userId) {
+        this.error = 'User ID is required';
+        this.entries = [];
+        return;
+      }
+
       this.loading = true;
       this.error = null;
 
       try {
         const params = new URLSearchParams();
 
-        // User ID comes from properties only
-        if (this.content.userId) {
-          params.append('user_id', String(this.content.userId));
-        }
+        // User ID comes from properties only (required)
+        params.append('user_id', String(this.content.userId));
 
         // Date filters can come from properties or local filters
         const dateFrom = this.content.dateFrom || this.dateInputToTimestamp(this.localDateFrom);
