@@ -239,44 +239,12 @@ export default {
         const period = this.content.period || this.localPeriod || 'week';
         params.append('period', period);
 
-        // Reference Date (optional, in seconds) - only send if explicitly set by user
-        // IMPORTANT: Don't send at all if not set, not even as null or empty string
-        let referenceDateToSend = null;
-
-        // Debug logging
-        console.log('Reference date check:', {
-          'content.referenceDate': this.content.referenceDate,
-          'localReferenceDate': this.localReferenceDate
+        console.log('API Call Parameters:', {
+          user_id: this.content.userId,
+          period: period
         });
 
-        // Priority 1: Check content.referenceDate (from properties)
-        if (this.content.referenceDate && typeof this.content.referenceDate === 'number' && this.content.referenceDate > 0) {
-          referenceDateToSend = this.content.referenceDate;
-          console.log('Using content.referenceDate:', referenceDateToSend);
-        }
-        // Priority 2: Check localReferenceDate (from UI input)
-        else if (this.localReferenceDate && typeof this.localReferenceDate === 'string' && this.localReferenceDate.trim() !== '') {
-          const timestamp = this.dateInputToTimestamp(this.localReferenceDate);
-          if (timestamp && !isNaN(timestamp) && timestamp > 0) {
-            referenceDateToSend = timestamp;
-            console.log('Using localReferenceDate:', this.localReferenceDate, '-> timestamp:', referenceDateToSend);
-          }
-        }
-
-        // Only append if we have a valid timestamp
-        if (referenceDateToSend && typeof referenceDateToSend === 'number' && !isNaN(referenceDateToSend) && referenceDateToSend > 0) {
-          const referenceDateSeconds = referenceDateToSend > 10000000000 ? Math.floor(referenceDateToSend / 1000) : referenceDateToSend;
-          params.append('reference_date', String(referenceDateSeconds));
-          console.log('✓ Including reference_date:', referenceDateSeconds);
-        } else {
-          console.log('✗ No reference_date - parameter will be omitted');
-        }
-
-        // Pagination
-        params.append('page', String(this.currentPage));
-        params.append('per_page', String(this.content.perPage || 100));
-
-        const url = `https://xv05-su7k-rvc8.f2.xano.io/api:6iYtDb6K/history/filtered?${params.toString()}`;
+        const url = `https://xv05-su7k-rvc8.f2.xano.io/api:6iYtDb6K/time_entries/history/filtered?${params.toString()}`;
 
         console.log('Fetching filtered history from:', url);
 
