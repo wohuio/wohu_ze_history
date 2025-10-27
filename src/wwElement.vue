@@ -108,7 +108,6 @@ export default {
     'content.userId': {
       handler(newVal) {
         this.localUserId = newVal;
-        this.updateContentProperty('filteredUserId', newVal);
       },
       immediate: true,
     },
@@ -117,7 +116,6 @@ export default {
         if (newVal) {
           this.localDateFrom = this.timestampToDateInput(newVal);
         }
-        this.updateContentProperty('filteredDateFrom', newVal);
       },
       immediate: true,
     },
@@ -126,24 +124,16 @@ export default {
         if (newVal) {
           this.localDateTo = this.timestampToDateInput(newVal);
         }
-        this.updateContentProperty('filteredDateTo', newVal);
       },
       immediate: true,
     },
     localDateFrom(newVal) {
       const timestamp = this.dateInputToTimestamp(newVal);
-      this.updateContentProperty('filteredDateFrom', timestamp);
+      this.updateContentProperty('filteredDateFromOutput', timestamp);
     },
     localDateTo(newVal) {
       const timestamp = this.dateInputToTimestamp(newVal);
-      this.updateContentProperty('filteredDateTo', timestamp);
-    },
-    entries: {
-      handler(newVal) {
-        this.updateContentProperty('historyEntries', newVal);
-        this.updateContentProperty('totalEntries', newVal.length);
-      },
-      immediate: true,
+      this.updateContentProperty('filteredDateToOutput', timestamp);
     },
   },
   mounted() {

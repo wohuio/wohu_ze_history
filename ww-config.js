@@ -52,66 +52,26 @@ export default {
       defaultValue: true,
       section: "settings",
     },
-    // Read-only properties (component state)
-    filteredUserId: {
+    // Output properties (set by component)
+    filteredDateFromOutput: {
       label: {
-        en: "Filtered User ID (read-only)",
-        de: "Gefilterte User ID (read-only)",
+        en: "Selected Date From",
+        de: "Ausgewähltes Von-Datum",
       },
       type: "Number",
       defaultValue: null,
       bindable: true,
       section: "settings",
-      readonly: true,
-      hidden: true,
     },
-    filteredDateFrom: {
+    filteredDateToOutput: {
       label: {
-        en: "Filtered Date From (read-only)",
-        de: "Gefiltertes Von-Datum (read-only)",
+        en: "Selected Date To",
+        de: "Ausgewähltes Bis-Datum",
       },
       type: "Number",
       defaultValue: null,
       bindable: true,
       section: "settings",
-      readonly: true,
-      hidden: true,
-    },
-    filteredDateTo: {
-      label: {
-        en: "Filtered Date To (read-only)",
-        de: "Gefiltertes Bis-Datum (read-only)",
-      },
-      type: "Number",
-      defaultValue: null,
-      bindable: true,
-      section: "settings",
-      readonly: true,
-      hidden: true,
-    },
-    historyEntries: {
-      label: {
-        en: "History Entries (read-only)",
-        de: "History-Einträge (read-only)",
-      },
-      type: "Array",
-      defaultValue: [],
-      bindable: true,
-      section: "settings",
-      readonly: true,
-      hidden: true,
-    },
-    totalEntries: {
-      label: {
-        en: "Total Entries (read-only)",
-        de: "Anzahl Einträge (read-only)",
-      },
-      type: "Number",
-      defaultValue: 0,
-      bindable: true,
-      section: "settings",
-      readonly: true,
-      hidden: true,
     },
   },
 };
