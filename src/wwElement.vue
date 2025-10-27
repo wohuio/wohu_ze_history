@@ -149,8 +149,11 @@ export default {
     },
     'content.referenceDate': {
       handler(newVal) {
-        if (newVal) {
+        // Only update if it's a valid timestamp (number > 0)
+        if (newVal && typeof newVal === 'number' && newVal > 0) {
           this.localReferenceDate = this.timestampToDateInput(newVal);
+        } else {
+          this.localReferenceDate = null;
         }
       },
       immediate: true,
@@ -198,14 +201,21 @@ export default {
 
         // Reference Date (optional, in seconds) - only send if explicitly set by user
         // IMPORTANT: Don't send at all if not set, not even as null or empty string
-        const hasReferenceDate = this.localReferenceDate || this.content.referenceDate;
-        if (hasReferenceDate) {
-          const referenceDate = this.content.referenceDate || this.dateInputToTimestamp(this.localReferenceDate);
-          if (referenceDate && referenceDate > 0) {
-            const referenceDateSeconds = referenceDate > 10000000000 ? Math.floor(referenceDate / 1000) : referenceDate;
-            params.append('reference_date', String(referenceDateSeconds));
-            console.log('Including reference_date:', referenceDateSeconds);
-          }
+        let referenceDateToSend = null;
+
+        // Priority 1: Check content.referenceDate (from properties)
+        if (this.content.referenceDate && typeof this.content.referenceDate === 'number' && this.content.referenceDate > 0) {
+          referenceDateToSend = this.content.referenceDate;
+        }
+        // Priority 2: Check localReferenceDate (from UI input)
+        else if (this.localReferenceDate && this.localReferenceDate.trim() !== '') {
+          referenceDateToSend = this.dateInputToTimestamp(this.localReferenceDate);
+        }
+
+        if (referenceDateToSend && referenceDateToSend > 0) {
+          const referenceDateSeconds = referenceDateToSend > 10000000000 ? Math.floor(referenceDateToSend / 1000) : referenceDateToSend;
+          params.append('reference_date', String(referenceDateSeconds));
+          console.log('Including reference_date:', referenceDateSeconds);
         } else {
           console.log('No reference_date - parameter will be omitted');
         }
