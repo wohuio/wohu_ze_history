@@ -17,10 +17,28 @@ export default {
       bindable: true,
       section: "settings",
     },
-    dateFrom: {
+    period: {
       label: {
-        en: "Date From (timestamp)",
-        de: "Von Datum (timestamp)",
+        en: "Period",
+        de: "Zeitraum",
+      },
+      type: "TextSelect",
+      defaultValue: "week",
+      bindable: true,
+      section: "settings",
+      options: {
+        options: [
+          { value: "day", label: "Day / Tag" },
+          { value: "week", label: "Week / Woche" },
+          { value: "month", label: "Month / Monat" },
+          { value: "year", label: "Year / Jahr" },
+        ],
+      },
+    },
+    referenceDate: {
+      label: {
+        en: "Reference Date (timestamp, optional)",
+        de: "Referenzdatum (timestamp, optional)",
       },
       type: "Text",
       defaultValue: null,
@@ -30,18 +48,15 @@ export default {
         type: "Variable",
       },
     },
-    dateTo: {
+    perPage: {
       label: {
-        en: "Date To (timestamp)",
-        de: "Bis Datum (timestamp)",
+        en: "Items per Page",
+        de: "Einträge pro Seite",
       },
-      type: "Text",
-      defaultValue: null,
+      type: "Number",
+      defaultValue: 100,
       bindable: true,
       section: "settings",
-      editor: {
-        type: "Variable",
-      },
     },
     showFilters: {
       label: {

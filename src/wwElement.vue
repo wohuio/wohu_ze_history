@@ -5,17 +5,18 @@
       <h3>Filter</h3>
       <div class="filter-grid">
         <div class="filter-item">
-          <label>Von Datum</label>
-          <input
-            v-model="localDateFrom"
-            type="date"
-            class="filter-input"
-          />
+          <label>Zeitraum</label>
+          <select v-model="localPeriod" class="filter-input">
+            <option value="day">Tag</option>
+            <option value="week">Woche</option>
+            <option value="month">Monat</option>
+            <option value="year">Jahr</option>
+          </select>
         </div>
         <div class="filter-item">
-          <label>Bis Datum</label>
+          <label>Referenzdatum (optional)</label>
           <input
-            v-model="localDateTo"
+            v-model="localReferenceDate"
             type="date"
             class="filter-input"
           />
@@ -90,27 +91,27 @@ export default {
   emits: ['update:content', 'trigger-event'],
   setup(props) {
     // Internal variables for WeWeb
-    const { value: filteredDateFromVar, setValue: setFilteredDateFromVar } =
+    const { value: currentPeriodVar, setValue: setCurrentPeriodVar } =
       window.wwLib.wwVariable.useComponentVariable({
         uid: props.uid,
-        name: 'filteredDateFrom',
-        type: 'number',
-        defaultValue: null,
+        name: 'currentPeriod',
+        type: 'string',
+        defaultValue: 'week',
       });
 
-    const { value: filteredDateToVar, setValue: setFilteredDateToVar } =
+    const { value: referenceDateVar, setValue: setReferenceDateVar } =
       window.wwLib.wwVariable.useComponentVariable({
         uid: props.uid,
-        name: 'filteredDateTo',
+        name: 'referenceDate',
         type: 'number',
         defaultValue: null,
       });
 
     return {
-      filteredDateFromVar,
-      setFilteredDateFromVar,
-      filteredDateToVar,
-      setFilteredDateToVar,
+      currentPeriodVar,
+      setCurrentPeriodVar,
+      referenceDateVar,
+      setReferenceDateVar,
     };
   },
   data() {
@@ -119,8 +120,9 @@ export default {
       loading: false,
       error: null,
       localUserId: null,
-      localDateFrom: null,
-      localDateTo: null,
+      localPeriod: 'week',
+      localReferenceDate: null,
+      currentPage: 1,
     };
   },
   computed: {
@@ -137,43 +139,33 @@ export default {
       },
       immediate: true,
     },
-    'content.dateFrom': {
+    'content.period': {
       handler(newVal) {
         if (newVal) {
-          this.localDateFrom = this.timestampToDateInput(newVal);
+          this.localPeriod = newVal;
         }
       },
       immediate: true,
     },
-    'content.dateTo': {
+    'content.referenceDate': {
       handler(newVal) {
         if (newVal) {
-          this.localDateTo = this.timestampToDateInput(newVal);
+          this.localReferenceDate = this.timestampToDateInput(newVal);
         }
       },
       immediate: true,
     },
-    localDateFrom(newVal) {
-      if (!newVal) {
-        this.setFilteredDateFromVar(null);
-        return;
-      }
-      const timestamp = this.dateInputToTimestamp(newVal);
-      // Store as seconds for Xano compatibility
-      const timestampSeconds = timestamp > 10000000000 ? Math.floor(timestamp / 1000) : timestamp;
-      console.log('localDateFrom changed:', newVal, '→', timestampSeconds);
-      this.setFilteredDateFromVar(timestampSeconds);
+    localPeriod(newVal) {
+      this.setCurrentPeriodVar(newVal);
     },
-    localDateTo(newVal) {
+    localReferenceDate(newVal) {
       if (!newVal) {
-        this.setFilteredDateToVar(null);
+        this.setReferenceDateVar(null);
         return;
       }
       const timestamp = this.dateInputToTimestamp(newVal);
-      // Store as seconds for Xano compatibility
       const timestampSeconds = timestamp > 10000000000 ? Math.floor(timestamp / 1000) : timestamp;
-      console.log('localDateTo changed:', newVal, '→', timestampSeconds);
-      this.setFilteredDateToVar(timestampSeconds);
+      this.setReferenceDateVar(timestampSeconds);
     },
   },
   mounted() {
@@ -197,36 +189,25 @@ export default {
       try {
         const params = new URLSearchParams();
 
-        // User ID comes from properties only (required)
+        // User ID (required)
         params.append('user_id', String(this.content.userId));
 
-        // Date filters can come from properties or local filters
-        // Convert to seconds if in milliseconds (Xano expects seconds)
-        const dateFrom = this.content.dateFrom || this.dateInputToTimestamp(this.localDateFrom);
-        console.log('dateFrom:', {
-          fromProps: this.content.dateFrom,
-          fromInput: this.localDateFrom,
-          timestamp: this.dateInputToTimestamp(this.localDateFrom),
-          final: dateFrom
-        });
-        if (dateFrom) {
-          const dateFromSeconds = dateFrom > 10000000000 ? Math.floor(dateFrom / 1000) : dateFrom;
-          params.append('date_from', String(dateFromSeconds));
+        // Period (from properties or local filter)
+        const period = this.content.period || this.localPeriod || 'week';
+        params.append('period', period);
+
+        // Reference Date (optional, in seconds)
+        const referenceDate = this.content.referenceDate || this.dateInputToTimestamp(this.localReferenceDate);
+        if (referenceDate) {
+          const referenceDateSeconds = referenceDate > 10000000000 ? Math.floor(referenceDate / 1000) : referenceDate;
+          params.append('reference_date', String(referenceDateSeconds));
         }
 
-        const dateTo = this.content.dateTo || this.dateInputToTimestamp(this.localDateTo);
-        console.log('dateTo:', {
-          fromProps: this.content.dateTo,
-          fromInput: this.localDateTo,
-          timestamp: this.dateInputToTimestamp(this.localDateTo),
-          final: dateTo
-        });
-        if (dateTo) {
-          const dateToSeconds = dateTo > 10000000000 ? Math.floor(dateTo / 1000) : dateTo;
-          params.append('date_to', String(dateToSeconds));
-        }
+        // Pagination
+        params.append('page', String(this.currentPage));
+        params.append('per_page', String(this.content.perPage || 100));
 
-        const url = `https://xv05-su7k-rvc8.f2.xano.io/api:6iYtDb6K/history/filtered?${params.toString()}`;
+        const url = `https://xv05-su7k-rvc8.f2.xano.io/api:6iYtDb6K/time_entries/history/filtered?${params.toString()}`;
 
         console.log('Fetching filtered history from:', url);
 
@@ -248,9 +229,10 @@ export default {
       this.loadData();
     },
     clearFilter() {
-      // Don't reset userId - it comes from properties only
-      this.localDateFrom = null;
-      this.localDateTo = null;
+      // Reset to defaults
+      this.localPeriod = 'week';
+      this.localReferenceDate = null;
+      this.currentPage = 1;
       this.loadData();
     },
     dateInputToTimestamp(dateString) {
