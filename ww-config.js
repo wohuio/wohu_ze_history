@@ -35,19 +35,6 @@ export default {
         ],
       },
     },
-    referenceDate: {
-      label: {
-        en: "Reference Date (timestamp, optional)",
-        de: "Referenzdatum (timestamp, optional)",
-      },
-      type: "Text",
-      defaultValue: null,
-      bindable: true,
-      section: "settings",
-      editor: {
-        type: "Variable",
-      },
-    },
     perPage: {
       label: {
         en: "Items per Page",

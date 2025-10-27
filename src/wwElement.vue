@@ -13,14 +13,6 @@
             <option value="year">Jahr</option>
           </select>
         </div>
-        <div class="filter-item">
-          <label>Referenzdatum (optional)</label>
-          <input
-            v-model="localReferenceDate"
-            type="date"
-            class="filter-input"
-          />
-        </div>
         <div class="filter-item filter-actions">
           <button @click="applyFilter" class="filter-button" :disabled="loading || !content.userId">
             <span class="filter-icon">🔍</span>
@@ -99,33 +91,18 @@ export default {
         defaultValue: 'week',
       });
 
-    const { value: referenceDateVar, setValue: setReferenceDateVar } =
-      window.wwLib.wwVariable.useComponentVariable({
-        uid: props.uid,
-        name: 'referenceDate',
-        type: 'number',
-        defaultValue: null,
-      });
-
     return {
       currentPeriodVar,
       setCurrentPeriodVar,
-      referenceDateVar,
-      setReferenceDateVar,
     };
   },
   data() {
-    // Set reference date to today by default
-    const today = new Date();
-    const todayString = today.toISOString().split('T')[0]; // YYYY-MM-DD format
-
     return {
       entries: [],
       loading: false,
       error: null,
       localUserId: null,
       localPeriod: 'week',
-      localReferenceDate: todayString, // Set to today's date
       currentPage: 1,
     };
   },
@@ -151,41 +128,8 @@ export default {
       },
       immediate: true,
     },
-    'content.referenceDate': {
-      handler(newVal) {
-        console.log('content.referenceDate changed to:', newVal, 'type:', typeof newVal);
-
-        // Only update if it's a valid timestamp (number > 0)
-        if (newVal && typeof newVal === 'number' && !isNaN(newVal) && newVal > 0) {
-          this.localReferenceDate = this.timestampToDateInput(newVal);
-          console.log('Set localReferenceDate to:', this.localReferenceDate);
-        } else {
-          this.localReferenceDate = null;
-          console.log('Cleared localReferenceDate');
-        }
-      },
-      immediate: true,
-    },
     localPeriod(newVal) {
       this.setCurrentPeriodVar(newVal);
-    },
-    localReferenceDate(newVal) {
-      // Handle null, undefined, empty string
-      if (!newVal || (typeof newVal === 'string' && newVal.trim() === '')) {
-        this.setReferenceDateVar(null);
-        return;
-      }
-
-      // Only process valid date strings
-      if (typeof newVal === 'string') {
-        const timestamp = this.dateInputToTimestamp(newVal);
-        if (!timestamp || isNaN(timestamp)) {
-          this.setReferenceDateVar(null);
-          return;
-        }
-        const timestampSeconds = timestamp > 10000000000 ? Math.floor(timestamp / 1000) : timestamp;
-        this.setReferenceDateVar(timestampSeconds);
-      }
     },
   },
   mounted() {
@@ -193,21 +137,10 @@ export default {
     console.log('content.userId:', this.content.userId);
     console.log('content.period:', this.content.period);
     console.log('content.showFilters:', this.content.showFilters);
-    console.log('localReferenceDate (today):', this.localReferenceDate);
     console.log('Full content:', this.content);
 
     // Initialize WeWeb variables with current values
     this.setCurrentPeriodVar(this.localPeriod);
-
-    // Set reference date variable (will be converted to timestamp by watcher)
-    if (this.localReferenceDate) {
-      const timestamp = this.dateInputToTimestamp(this.localReferenceDate);
-      if (timestamp && !isNaN(timestamp)) {
-        const timestampSeconds = timestamp > 10000000000 ? Math.floor(timestamp / 1000) : timestamp;
-        this.setReferenceDateVar(timestampSeconds);
-        console.log('✓ Set reference date to today:', this.localReferenceDate, '(', timestampSeconds, 'seconds)');
-      }
-    }
 
     // Only load if user_id is set (required by API)
     if (this.content.userId) {
@@ -285,33 +218,10 @@ export default {
       this.loadData();
     },
     clearFilter() {
-      // Reset to defaults (including today's date)
-      const today = new Date();
-      const todayString = today.toISOString().split('T')[0];
-
+      // Reset to defaults
       this.localPeriod = 'week';
-      this.localReferenceDate = todayString; // Reset to today
       this.currentPage = 1;
       this.loadData();
-    },
-    dateInputToTimestamp(dateString) {
-      if (!dateString || typeof dateString !== 'string') return null;
-      const trimmed = dateString.trim();
-      if (trimmed === '') return null;
-
-      const timestamp = new Date(trimmed).getTime();
-      // Check if the date is valid
-      if (isNaN(timestamp)) return null;
-
-      return timestamp;
-    },
-    timestampToDateInput(timestamp) {
-      if (!timestamp) return null;
-      const ts = parseInt(timestamp);
-      // Convert to milliseconds if in seconds
-      const msTimestamp = ts < 10000000000 ? ts * 1000 : ts;
-      const date = new Date(msTimestamp);
-      return date.toISOString().split('T')[0];
     },
     formatDate(timestamp) {
       if (!timestamp) return '-';
@@ -368,7 +278,7 @@ export default {
 
 .filter-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr auto;
+  grid-template-columns: 1fr auto;
   gap: 16px;
   align-items: end;
 }
