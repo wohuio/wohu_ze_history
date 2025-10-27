@@ -115,18 +115,34 @@ export default {
   },
   watch: {
     'content.userId': {
-      handler(newVal) {
+      handler(newVal, oldVal) {
         this.localUserId = newVal;
+        // Reload data when userId changes (but not on initial mount)
+        if (oldVal !== undefined && newVal && newVal !== oldVal) {
+          this.loadData();
+        }
       },
       immediate: true,
     },
     'content.period': {
-      handler(newVal) {
+      handler(newVal, oldVal) {
         if (newVal) {
           this.localPeriod = newVal;
         }
+        // Reload data when period changes (but not on initial mount)
+        if (oldVal !== undefined && newVal && newVal !== oldVal && this.content.userId) {
+          this.loadData();
+        }
       },
       immediate: true,
+    },
+    'content.perPage': {
+      handler(newVal, oldVal) {
+        // Reload data when perPage changes (but not on initial mount)
+        if (oldVal !== undefined && newVal !== oldVal && this.content.userId) {
+          this.loadData();
+        }
+      },
     },
     localPeriod(newVal) {
       this.setCurrentPeriodVar(newVal);
