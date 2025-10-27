@@ -95,6 +95,12 @@ export default {
       localUserId: null,
       localDateFrom: null,
       localDateTo: null,
+      // WeWeb exportable variables
+      filteredUserId: null,
+      filteredDateFrom: null,
+      filteredDateTo: null,
+      historyEntries: [],
+      totalEntries: 0,
     };
   },
   computed: {
@@ -103,27 +109,12 @@ export default {
         return (b.clock_in || 0) - (a.clock_in || 0);
       });
     },
-    // Export these as WeWeb variables
-    filteredUserId() {
-      return this.content.userId;
-    },
-    filteredDateFrom() {
-      return this.dateInputToTimestamp(this.localDateFrom);
-    },
-    filteredDateTo() {
-      return this.dateInputToTimestamp(this.localDateTo);
-    },
-    historyEntries() {
-      return this.entries;
-    },
-    totalEntries() {
-      return this.entries.length;
-    },
   },
   watch: {
     'content.userId': {
       handler(newVal) {
         this.localUserId = newVal;
+        this.filteredUserId = newVal;
       },
       immediate: true,
     },
@@ -132,6 +123,7 @@ export default {
         if (newVal) {
           this.localDateFrom = this.timestampToDateInput(newVal);
         }
+        this.filteredDateFrom = newVal;
       },
       immediate: true,
     },
@@ -140,6 +132,20 @@ export default {
         if (newVal) {
           this.localDateTo = this.timestampToDateInput(newVal);
         }
+        this.filteredDateTo = newVal;
+      },
+      immediate: true,
+    },
+    localDateFrom(newVal) {
+      this.filteredDateFrom = this.dateInputToTimestamp(newVal);
+    },
+    localDateTo(newVal) {
+      this.filteredDateTo = this.dateInputToTimestamp(newVal);
+    },
+    entries: {
+      handler(newVal) {
+        this.historyEntries = newVal;
+        this.totalEntries = newVal.length;
       },
       immediate: true,
     },
