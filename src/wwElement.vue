@@ -154,15 +154,25 @@ export default {
       immediate: true,
     },
     localDateFrom(newVal) {
+      if (!newVal) {
+        this.setFilteredDateFromVar(null);
+        return;
+      }
       const timestamp = this.dateInputToTimestamp(newVal);
       // Store as seconds for Xano compatibility
       const timestampSeconds = timestamp > 10000000000 ? Math.floor(timestamp / 1000) : timestamp;
+      console.log('localDateFrom changed:', newVal, '→', timestampSeconds);
       this.setFilteredDateFromVar(timestampSeconds);
     },
     localDateTo(newVal) {
+      if (!newVal) {
+        this.setFilteredDateToVar(null);
+        return;
+      }
       const timestamp = this.dateInputToTimestamp(newVal);
       // Store as seconds for Xano compatibility
       const timestampSeconds = timestamp > 10000000000 ? Math.floor(timestamp / 1000) : timestamp;
+      console.log('localDateTo changed:', newVal, '→', timestampSeconds);
       this.setFilteredDateToVar(timestampSeconds);
     },
   },
@@ -193,12 +203,24 @@ export default {
         // Date filters can come from properties or local filters
         // Convert to seconds if in milliseconds (Xano expects seconds)
         const dateFrom = this.content.dateFrom || this.dateInputToTimestamp(this.localDateFrom);
+        console.log('dateFrom:', {
+          fromProps: this.content.dateFrom,
+          fromInput: this.localDateFrom,
+          timestamp: this.dateInputToTimestamp(this.localDateFrom),
+          final: dateFrom
+        });
         if (dateFrom) {
           const dateFromSeconds = dateFrom > 10000000000 ? Math.floor(dateFrom / 1000) : dateFrom;
           params.append('date_from', String(dateFromSeconds));
         }
 
         const dateTo = this.content.dateTo || this.dateInputToTimestamp(this.localDateTo);
+        console.log('dateTo:', {
+          fromProps: this.content.dateTo,
+          fromInput: this.localDateTo,
+          timestamp: this.dateInputToTimestamp(this.localDateTo),
+          final: dateTo
+        });
         if (dateTo) {
           const dateToSeconds = dateTo > 10000000000 ? Math.floor(dateTo / 1000) : dateTo;
           params.append('date_to', String(dateToSeconds));
@@ -237,12 +259,18 @@ export default {
     },
     timestampToDateInput(timestamp) {
       if (!timestamp) return null;
-      const date = new Date(parseInt(timestamp));
+      const ts = parseInt(timestamp);
+      // Convert to milliseconds if in seconds
+      const msTimestamp = ts < 10000000000 ? ts * 1000 : ts;
+      const date = new Date(msTimestamp);
       return date.toISOString().split('T')[0];
     },
     formatDate(timestamp) {
       if (!timestamp) return '-';
-      return new Date(timestamp).toLocaleDateString('de-DE', {
+      const ts = parseInt(timestamp);
+      // Convert to milliseconds if in seconds
+      const msTimestamp = ts < 10000000000 ? ts * 1000 : ts;
+      return new Date(msTimestamp).toLocaleDateString('de-DE', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
@@ -250,7 +278,10 @@ export default {
     },
     formatTime(timestamp) {
       if (!timestamp) return '-';
-      return new Date(timestamp).toLocaleTimeString('de-DE', {
+      const ts = parseInt(timestamp);
+      // Convert to milliseconds if in seconds
+      const msTimestamp = ts < 10000000000 ? ts * 1000 : ts;
+      return new Date(msTimestamp).toLocaleTimeString('de-DE', {
         hour: '2-digit',
         minute: '2-digit',
       });
