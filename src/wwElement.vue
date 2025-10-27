@@ -5,15 +5,6 @@
       <h3>Filter</h3>
       <div class="filter-grid">
         <div class="filter-item">
-          <label>Benutzer ID</label>
-          <input
-            v-model.number="localUserId"
-            type="number"
-            placeholder="z.B. 1"
-            class="filter-input"
-          />
-        </div>
-        <div class="filter-item">
           <label>Von Datum</label>
           <input
             v-model="localDateFrom"
@@ -114,7 +105,7 @@ export default {
     },
     // Export these as WeWeb variables
     filteredUserId() {
-      return this.localUserId;
+      return this.content.userId;
     },
     filteredDateFrom() {
       return this.dateInputToTimestamp(this.localDateFrom);
@@ -168,12 +159,12 @@ export default {
       try {
         const params = new URLSearchParams();
 
-        // Add filters if set
-        const userId = this.content.userId || this.localUserId;
-        if (userId) {
-          params.append('user_id', String(userId));
+        // User ID comes from properties only
+        if (this.content.userId) {
+          params.append('user_id', String(this.content.userId));
         }
 
+        // Date filters can come from properties or local filters
         const dateFrom = this.content.dateFrom || this.dateInputToTimestamp(this.localDateFrom);
         if (dateFrom) {
           params.append('date_from', String(dateFrom));
@@ -206,7 +197,7 @@ export default {
       this.loadData();
     },
     clearFilter() {
-      this.localUserId = null;
+      // Don't reset userId - it comes from properties only
       this.localDateFrom = null;
       this.localDateTo = null;
       this.loadData();
@@ -269,8 +260,9 @@ export default {
 
 .filter-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: 1fr 1fr auto;
   gap: 16px;
+  align-items: end;
 }
 
 .filter-item {
