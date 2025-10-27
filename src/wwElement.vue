@@ -172,9 +172,15 @@ export default {
         const period = this.content.period || this.localPeriod || 'week';
         params.append('period', period);
 
+        // Items per page (optional, default: 100)
+        if (this.content.perPage) {
+          params.append('per_page', String(this.content.perPage));
+        }
+
         console.log('API Call Parameters:', {
           user_id: this.content.userId,
-          period: period
+          period: period,
+          per_page: this.content.perPage || 'default (25)'
         });
 
         const url = `https://xv05-su7k-rvc8.f2.xano.io/api:6iYtDb6K/history/filtered?${params.toString()}`;
