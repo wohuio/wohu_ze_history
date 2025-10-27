@@ -1,0 +1,6 @@
+{
+  "name": "history_filtered",
+  "version": "1.0.0",
+  "displayName": "Filtered History",
+  "description": "A filterable history table component for WeWeb"
+}

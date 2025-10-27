@@ -1,0 +1,13 @@
+{
+  "name": "history_filtered",
+  "version": "1.0.0",
+  "description": "Filtered History Component for WeWeb",
+  "main": "ww-config.js",
+  "scripts": {
+    "build": "weweb build --name history_filtered",
+    "serve": "weweb serve"
+  },
+  "devDependencies": {
+    "@weweb/cli": "latest"
+  }
+}
