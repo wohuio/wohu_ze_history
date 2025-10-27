@@ -95,12 +95,6 @@ export default {
       localUserId: null,
       localDateFrom: null,
       localDateTo: null,
-      // WeWeb exportable variables
-      filteredUserId: null,
-      filteredDateFrom: null,
-      filteredDateTo: null,
-      historyEntries: [],
-      totalEntries: 0,
     };
   },
   computed: {
@@ -114,7 +108,7 @@ export default {
     'content.userId': {
       handler(newVal) {
         this.localUserId = newVal;
-        this.filteredUserId = newVal;
+        this.updateContentProperty('filteredUserId', newVal);
       },
       immediate: true,
     },
@@ -123,7 +117,7 @@ export default {
         if (newVal) {
           this.localDateFrom = this.timestampToDateInput(newVal);
         }
-        this.filteredDateFrom = newVal;
+        this.updateContentProperty('filteredDateFrom', newVal);
       },
       immediate: true,
     },
@@ -132,20 +126,22 @@ export default {
         if (newVal) {
           this.localDateTo = this.timestampToDateInput(newVal);
         }
-        this.filteredDateTo = newVal;
+        this.updateContentProperty('filteredDateTo', newVal);
       },
       immediate: true,
     },
     localDateFrom(newVal) {
-      this.filteredDateFrom = this.dateInputToTimestamp(newVal);
+      const timestamp = this.dateInputToTimestamp(newVal);
+      this.updateContentProperty('filteredDateFrom', timestamp);
     },
     localDateTo(newVal) {
-      this.filteredDateTo = this.dateInputToTimestamp(newVal);
+      const timestamp = this.dateInputToTimestamp(newVal);
+      this.updateContentProperty('filteredDateTo', timestamp);
     },
     entries: {
       handler(newVal) {
-        this.historyEntries = newVal;
-        this.totalEntries = newVal.length;
+        this.updateContentProperty('historyEntries', newVal);
+        this.updateContentProperty('totalEntries', newVal.length);
       },
       immediate: true,
     },
@@ -158,6 +154,12 @@ export default {
     }
   },
   methods: {
+    updateContentProperty(key, value) {
+      this.$emit('update:content', {
+        ...this.content,
+        [key]: value,
+      });
+    },
     async loadData() {
       this.loading = true;
       this.error = null;

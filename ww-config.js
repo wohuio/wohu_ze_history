@@ -6,38 +6,6 @@ export default {
       de: "Gefilterte Historie",
     },
   },
-  variables: [
-    {
-      name: "filteredUserId",
-      value: null,
-      type: "number",
-      defaultValue: null,
-    },
-    {
-      name: "filteredDateFrom",
-      value: null,
-      type: "number",
-      defaultValue: null,
-    },
-    {
-      name: "filteredDateTo",
-      value: null,
-      type: "number",
-      defaultValue: null,
-    },
-    {
-      name: "historyEntries",
-      value: [],
-      type: "array",
-      defaultValue: [],
-    },
-    {
-      name: "totalEntries",
-      value: 0,
-      type: "number",
-      defaultValue: 0,
-    },
-  ],
   properties: {
     userId: {
       label: {
@@ -83,6 +51,67 @@ export default {
       type: "OnOff",
       defaultValue: true,
       section: "settings",
+    },
+    // Read-only properties (component state)
+    filteredUserId: {
+      label: {
+        en: "Filtered User ID (read-only)",
+        de: "Gefilterte User ID (read-only)",
+      },
+      type: "Number",
+      defaultValue: null,
+      bindable: true,
+      section: "settings",
+      readonly: true,
+      hidden: true,
+    },
+    filteredDateFrom: {
+      label: {
+        en: "Filtered Date From (read-only)",
+        de: "Gefiltertes Von-Datum (read-only)",
+      },
+      type: "Number",
+      defaultValue: null,
+      bindable: true,
+      section: "settings",
+      readonly: true,
+      hidden: true,
+    },
+    filteredDateTo: {
+      label: {
+        en: "Filtered Date To (read-only)",
+        de: "Gefiltertes Bis-Datum (read-only)",
+      },
+      type: "Number",
+      defaultValue: null,
+      bindable: true,
+      section: "settings",
+      readonly: true,
+      hidden: true,
+    },
+    historyEntries: {
+      label: {
+        en: "History Entries (read-only)",
+        de: "History-Einträge (read-only)",
+      },
+      type: "Array",
+      defaultValue: [],
+      bindable: true,
+      section: "settings",
+      readonly: true,
+      hidden: true,
+    },
+    totalEntries: {
+      label: {
+        en: "Total Entries (read-only)",
+        de: "Anzahl Einträge (read-only)",
+      },
+      type: "Number",
+      defaultValue: 0,
+      bindable: true,
+      section: "settings",
+      readonly: true,
+      hidden: true,
     },
   },
 };
