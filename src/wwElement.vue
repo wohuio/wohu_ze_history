@@ -149,11 +149,15 @@ export default {
     },
     'content.referenceDate': {
       handler(newVal) {
+        console.log('content.referenceDate changed to:', newVal, 'type:', typeof newVal);
+
         // Only update if it's a valid timestamp (number > 0)
-        if (newVal && typeof newVal === 'number' && newVal > 0) {
+        if (newVal && typeof newVal === 'number' && !isNaN(newVal) && newVal > 0) {
           this.localReferenceDate = this.timestampToDateInput(newVal);
+          console.log('Set localReferenceDate to:', this.localReferenceDate);
         } else {
           this.localReferenceDate = null;
+          console.log('Cleared localReferenceDate');
         }
       },
       immediate: true,
@@ -162,13 +166,22 @@ export default {
       this.setCurrentPeriodVar(newVal);
     },
     localReferenceDate(newVal) {
-      if (!newVal) {
+      // Handle null, undefined, empty string
+      if (!newVal || (typeof newVal === 'string' && newVal.trim() === '')) {
         this.setReferenceDateVar(null);
         return;
       }
-      const timestamp = this.dateInputToTimestamp(newVal);
-      const timestampSeconds = timestamp > 10000000000 ? Math.floor(timestamp / 1000) : timestamp;
-      this.setReferenceDateVar(timestampSeconds);
+
+      // Only process valid date strings
+      if (typeof newVal === 'string') {
+        const timestamp = this.dateInputToTimestamp(newVal);
+        if (!timestamp || isNaN(timestamp)) {
+          this.setReferenceDateVar(null);
+          return;
+        }
+        const timestampSeconds = timestamp > 10000000000 ? Math.floor(timestamp / 1000) : timestamp;
+        this.setReferenceDateVar(timestampSeconds);
+      }
     },
   },
   mounted() {
@@ -203,21 +216,33 @@ export default {
         // IMPORTANT: Don't send at all if not set, not even as null or empty string
         let referenceDateToSend = null;
 
+        // Debug logging
+        console.log('Reference date check:', {
+          'content.referenceDate': this.content.referenceDate,
+          'localReferenceDate': this.localReferenceDate
+        });
+
         // Priority 1: Check content.referenceDate (from properties)
         if (this.content.referenceDate && typeof this.content.referenceDate === 'number' && this.content.referenceDate > 0) {
           referenceDateToSend = this.content.referenceDate;
+          console.log('Using content.referenceDate:', referenceDateToSend);
         }
         // Priority 2: Check localReferenceDate (from UI input)
-        else if (this.localReferenceDate && this.localReferenceDate.trim() !== '') {
-          referenceDateToSend = this.dateInputToTimestamp(this.localReferenceDate);
+        else if (this.localReferenceDate && typeof this.localReferenceDate === 'string' && this.localReferenceDate.trim() !== '') {
+          const timestamp = this.dateInputToTimestamp(this.localReferenceDate);
+          if (timestamp && !isNaN(timestamp) && timestamp > 0) {
+            referenceDateToSend = timestamp;
+            console.log('Using localReferenceDate:', this.localReferenceDate, '-> timestamp:', referenceDateToSend);
+          }
         }
 
-        if (referenceDateToSend && referenceDateToSend > 0) {
+        // Only append if we have a valid timestamp
+        if (referenceDateToSend && typeof referenceDateToSend === 'number' && !isNaN(referenceDateToSend) && referenceDateToSend > 0) {
           const referenceDateSeconds = referenceDateToSend > 10000000000 ? Math.floor(referenceDateToSend / 1000) : referenceDateToSend;
           params.append('reference_date', String(referenceDateSeconds));
-          console.log('Including reference_date:', referenceDateSeconds);
+          console.log('✓ Including reference_date:', referenceDateSeconds);
         } else {
-          console.log('No reference_date - parameter will be omitted');
+          console.log('✗ No reference_date - parameter will be omitted');
         }
 
         // Pagination
@@ -235,7 +260,15 @@ export default {
         }
 
         const data = await response.json();
-        this.entries = Array.isArray(data) ? data : [];
+
+        // API returns object with entries array, not direct array
+        if (data && data.entries && Array.isArray(data.entries)) {
+          this.entries = data.entries;
+          console.log('Loaded entries:', data.entries.length, 'Period:', data.period_label);
+        } else {
+          this.entries = [];
+          console.warn('Unexpected API response format:', data);
+        }
       } catch (err) {
         this.error = err.message;
       } finally {
@@ -253,8 +286,15 @@ export default {
       this.loadData();
     },
     dateInputToTimestamp(dateString) {
-      if (!dateString) return null;
-      return new Date(dateString).getTime();
+      if (!dateString || typeof dateString !== 'string') return null;
+      const trimmed = dateString.trim();
+      if (trimmed === '') return null;
+
+      const timestamp = new Date(trimmed).getTime();
+      // Check if the date is valid
+      if (isNaN(timestamp)) return null;
+
+      return timestamp;
     },
     timestampToDateInput(timestamp) {
       if (!timestamp) return null;
