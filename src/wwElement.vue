@@ -196,11 +196,13 @@ export default {
         const period = this.content.period || this.localPeriod || 'week';
         params.append('period', period);
 
-        // Reference Date (optional, in seconds)
-        const referenceDate = this.content.referenceDate || this.dateInputToTimestamp(this.localReferenceDate);
-        if (referenceDate) {
-          const referenceDateSeconds = referenceDate > 10000000000 ? Math.floor(referenceDate / 1000) : referenceDate;
-          params.append('reference_date', String(referenceDateSeconds));
+        // Reference Date (optional, in seconds) - only send if explicitly set by user
+        if (this.localReferenceDate || this.content.referenceDate) {
+          const referenceDate = this.content.referenceDate || this.dateInputToTimestamp(this.localReferenceDate);
+          if (referenceDate) {
+            const referenceDateSeconds = referenceDate > 10000000000 ? Math.floor(referenceDate / 1000) : referenceDate;
+            params.append('reference_date', String(referenceDateSeconds));
+          }
         }
 
         // Pagination
