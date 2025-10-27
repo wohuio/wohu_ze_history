@@ -115,13 +115,17 @@ export default {
     };
   },
   data() {
+    // Set reference date to today by default
+    const today = new Date();
+    const todayString = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+
     return {
       entries: [],
       loading: false,
       error: null,
       localUserId: null,
       localPeriod: 'week',
-      localReferenceDate: null,
+      localReferenceDate: todayString, // Set to today's date
       currentPage: 1,
     };
   },
@@ -185,9 +189,32 @@ export default {
     },
   },
   mounted() {
+    console.log('=== HISTORY COMPONENT MOUNTED ===');
+    console.log('content.userId:', this.content.userId);
+    console.log('content.period:', this.content.period);
+    console.log('content.showFilters:', this.content.showFilters);
+    console.log('localReferenceDate (today):', this.localReferenceDate);
+    console.log('Full content:', this.content);
+
+    // Initialize WeWeb variables with current values
+    this.setCurrentPeriodVar(this.localPeriod);
+
+    // Set reference date variable (will be converted to timestamp by watcher)
+    if (this.localReferenceDate) {
+      const timestamp = this.dateInputToTimestamp(this.localReferenceDate);
+      if (timestamp && !isNaN(timestamp)) {
+        const timestampSeconds = timestamp > 10000000000 ? Math.floor(timestamp / 1000) : timestamp;
+        this.setReferenceDateVar(timestampSeconds);
+        console.log('✓ Set reference date to today:', this.localReferenceDate, '(', timestampSeconds, 'seconds)');
+      }
+    }
+
     // Only load if user_id is set (required by API)
     if (this.content.userId) {
+      console.log('✓ userId is set, calling loadData()');
       this.loadData();
+    } else {
+      console.log('✗ userId is NOT set, skipping loadData()');
     }
   },
   methods: {
@@ -256,7 +283,18 @@ export default {
         const response = await fetch(url);
 
         if (!response.ok) {
-          throw new Error('API Error: ' + response.status);
+          // Try to get error details from response
+          let errorMessage = `API Error ${response.status}`;
+          try {
+            const errorData = await response.json();
+            console.error('API Error Response:', errorData);
+            errorMessage = errorData.message || errorData.error || JSON.stringify(errorData);
+          } catch (e) {
+            const errorText = await response.text();
+            console.error('API Error Text:', errorText);
+            if (errorText) errorMessage += ': ' + errorText;
+          }
+          throw new Error(errorMessage);
         }
 
         const data = await response.json();
@@ -279,9 +317,12 @@ export default {
       this.loadData();
     },
     clearFilter() {
-      // Reset to defaults
+      // Reset to defaults (including today's date)
+      const today = new Date();
+      const todayString = today.toISOString().split('T')[0];
+
       this.localPeriod = 'week';
-      this.localReferenceDate = null;
+      this.localReferenceDate = todayString; // Reset to today
       this.currentPage = 1;
       this.loadData();
     },
