@@ -11,26 +11,31 @@ export default {
       name: "filteredUserId",
       value: null,
       type: "number",
+      defaultValue: null,
     },
     {
       name: "filteredDateFrom",
       value: null,
       type: "number",
+      defaultValue: null,
     },
     {
       name: "filteredDateTo",
       value: null,
       type: "number",
+      defaultValue: null,
     },
     {
       name: "historyEntries",
       value: [],
       type: "array",
+      defaultValue: [],
     },
     {
       name: "totalEntries",
       value: 0,
       type: "number",
+      defaultValue: 0,
     },
   ],
   properties: {

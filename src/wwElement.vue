@@ -95,6 +95,7 @@ export default {
     content: { type: Object, required: true },
     uid: { type: String, default: null },
   },
+  emits: ['update:content', 'trigger-event'],
   data() {
     return {
       entries: [],
@@ -105,12 +106,27 @@ export default {
       localDateTo: null,
     };
   },
-  emits: ['update:content'],
   computed: {
     sortedEntries() {
       return [...this.entries].sort((a, b) => {
         return (b.clock_in || 0) - (a.clock_in || 0);
       });
+    },
+    // Export these as WeWeb variables
+    filteredUserId() {
+      return this.localUserId;
+    },
+    filteredDateFrom() {
+      return this.dateInputToTimestamp(this.localDateFrom);
+    },
+    filteredDateTo() {
+      return this.dateInputToTimestamp(this.localDateTo);
+    },
+    historyEntries() {
+      return this.entries;
+    },
+    totalEntries() {
+      return this.entries.length;
     },
   },
   watch: {
@@ -136,19 +152,6 @@ export default {
       },
       immediate: true,
     },
-    localUserId(newVal) {
-      this.updateVariable('filteredUserId', newVal);
-    },
-    localDateFrom(newVal) {
-      this.updateVariable('filteredDateFrom', this.dateInputToTimestamp(newVal));
-    },
-    localDateTo(newVal) {
-      this.updateVariable('filteredDateTo', this.dateInputToTimestamp(newVal));
-    },
-    entries(newVal) {
-      this.updateVariable('historyEntries', newVal);
-      this.updateVariable('totalEntries', newVal.length);
-    },
   },
   mounted() {
     // Only load if at least one parameter is set
@@ -158,11 +161,6 @@ export default {
     }
   },
   methods: {
-    updateVariable(name, value) {
-      if (this.uid && window.wwLib) {
-        window.wwLib.wwVariable.updateValue(`${this.uid}-${name}`, value);
-      }
-    },
     async loadData() {
       this.loading = true;
       this.error = null;
