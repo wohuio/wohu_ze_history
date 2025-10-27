@@ -155,11 +155,15 @@ export default {
     },
     localDateFrom(newVal) {
       const timestamp = this.dateInputToTimestamp(newVal);
-      this.setFilteredDateFromVar(timestamp);
+      // Store as seconds for Xano compatibility
+      const timestampSeconds = timestamp > 10000000000 ? Math.floor(timestamp / 1000) : timestamp;
+      this.setFilteredDateFromVar(timestampSeconds);
     },
     localDateTo(newVal) {
       const timestamp = this.dateInputToTimestamp(newVal);
-      this.setFilteredDateToVar(timestamp);
+      // Store as seconds for Xano compatibility
+      const timestampSeconds = timestamp > 10000000000 ? Math.floor(timestamp / 1000) : timestamp;
+      this.setFilteredDateToVar(timestampSeconds);
     },
   },
   mounted() {
@@ -187,14 +191,17 @@ export default {
         params.append('user_id', String(this.content.userId));
 
         // Date filters can come from properties or local filters
+        // Convert to seconds if in milliseconds (Xano expects seconds)
         const dateFrom = this.content.dateFrom || this.dateInputToTimestamp(this.localDateFrom);
         if (dateFrom) {
-          params.append('date_from', String(dateFrom));
+          const dateFromSeconds = dateFrom > 10000000000 ? Math.floor(dateFrom / 1000) : dateFrom;
+          params.append('date_from', String(dateFromSeconds));
         }
 
         const dateTo = this.content.dateTo || this.dateInputToTimestamp(this.localDateTo);
         if (dateTo) {
-          params.append('date_to', String(dateTo));
+          const dateToSeconds = dateTo > 10000000000 ? Math.floor(dateTo / 1000) : dateTo;
+          params.append('date_to', String(dateToSeconds));
         }
 
         const url = `https://xv05-su7k-rvc8.f2.xano.io/api:6iYtDb6K/history/filtered?${params.toString()}`;
