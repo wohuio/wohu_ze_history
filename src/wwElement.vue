@@ -197,12 +197,17 @@ export default {
         params.append('period', period);
 
         // Reference Date (optional, in seconds) - only send if explicitly set by user
-        if (this.localReferenceDate || this.content.referenceDate) {
+        // IMPORTANT: Don't send at all if not set, not even as null or empty string
+        const hasReferenceDate = this.localReferenceDate || this.content.referenceDate;
+        if (hasReferenceDate) {
           const referenceDate = this.content.referenceDate || this.dateInputToTimestamp(this.localReferenceDate);
-          if (referenceDate) {
+          if (referenceDate && referenceDate > 0) {
             const referenceDateSeconds = referenceDate > 10000000000 ? Math.floor(referenceDate / 1000) : referenceDate;
             params.append('reference_date', String(referenceDateSeconds));
+            console.log('Including reference_date:', referenceDateSeconds);
           }
+        } else {
+          console.log('No reference_date - parameter will be omitted');
         }
 
         // Pagination
