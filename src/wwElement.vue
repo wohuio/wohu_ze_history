@@ -93,6 +93,7 @@
 export default {
   props: {
     content: { type: Object, required: true },
+    uid: { type: String, default: null },
   },
   data() {
     return {
@@ -104,6 +105,7 @@ export default {
       localDateTo: null,
     };
   },
+  emits: ['update:content'],
   computed: {
     sortedEntries() {
       return [...this.entries].sort((a, b) => {
@@ -134,11 +136,33 @@ export default {
       },
       immediate: true,
     },
+    localUserId(newVal) {
+      this.updateVariable('filteredUserId', newVal);
+    },
+    localDateFrom(newVal) {
+      this.updateVariable('filteredDateFrom', this.dateInputToTimestamp(newVal));
+    },
+    localDateTo(newVal) {
+      this.updateVariable('filteredDateTo', this.dateInputToTimestamp(newVal));
+    },
+    entries(newVal) {
+      this.updateVariable('historyEntries', newVal);
+      this.updateVariable('totalEntries', newVal.length);
+    },
   },
   mounted() {
-    this.loadData();
+    // Only load if at least one parameter is set
+    const hasParams = this.content.userId || this.content.dateFrom || this.content.dateTo;
+    if (hasParams) {
+      this.loadData();
+    }
   },
   methods: {
+    updateVariable(name, value) {
+      if (this.uid && window.wwLib) {
+        window.wwLib.wwVariable.updateValue(`${this.uid}-${name}`, value);
+      }
+    },
     async loadData() {
       this.loading = true;
       this.error = null;

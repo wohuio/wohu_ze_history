@@ -6,6 +6,33 @@ export default {
       de: "Gefilterte Historie",
     },
   },
+  variables: [
+    {
+      name: "filteredUserId",
+      value: null,
+      type: "number",
+    },
+    {
+      name: "filteredDateFrom",
+      value: null,
+      type: "number",
+    },
+    {
+      name: "filteredDateTo",
+      value: null,
+      type: "number",
+    },
+    {
+      name: "historyEntries",
+      value: [],
+      type: "array",
+    },
+    {
+      name: "totalEntries",
+      value: 0,
+      type: "number",
+    },
+  ],
   properties: {
     userId: {
       label: {
