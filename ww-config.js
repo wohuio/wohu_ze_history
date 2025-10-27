@@ -22,20 +22,26 @@ export default {
         en: "Date From (timestamp)",
         de: "Von Datum (timestamp)",
       },
-      type: "Number",
+      type: "Text",
       defaultValue: null,
       bindable: true,
       section: "settings",
+      editor: {
+        type: "Variable",
+      },
     },
     dateTo: {
       label: {
         en: "Date To (timestamp)",
         de: "Bis Datum (timestamp)",
       },
-      type: "Number",
+      type: "Text",
       defaultValue: null,
       bindable: true,
       section: "settings",
+      editor: {
+        type: "Variable",
+      },
     },
     showFilters: {
       label: {
