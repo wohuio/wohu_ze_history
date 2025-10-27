@@ -64,6 +64,30 @@
           </tr>
         </tbody>
       </table>
+
+      <!-- Pagination Navigation -->
+      <div v-if="pagination" class="pagination">
+        <button
+          @click="prevPage"
+          class="pagination-button"
+          :disabled="!pagination.prevPage || loading"
+        >
+          ← Vorherige
+        </button>
+
+        <div class="pagination-info">
+          <span class="page-number">Seite {{ pagination.curPage }}</span>
+          <span class="items-info">{{ pagination.itemsReceived }} Einträge</span>
+        </div>
+
+        <button
+          @click="nextPage"
+          class="pagination-button"
+          :disabled="!pagination.nextPage || loading"
+        >
+          Nächste →
+        </button>
+      </div>
     </div>
 
     <!-- Empty State -->
@@ -104,6 +128,7 @@ export default {
       localUserId: null,
       localPeriod: 'week',
       currentPage: 1,
+      pagination: null, // Stores pagination info from API
     };
   },
   computed: {
@@ -131,6 +156,7 @@ export default {
         }
         // Reload data when period changes (but not on initial mount)
         if (oldVal !== undefined && newVal && newVal !== oldVal && this.content.userId) {
+          this.currentPage = 1; // Reset to first page
           this.loadData();
         }
       },
@@ -140,6 +166,7 @@ export default {
       handler(newVal, oldVal) {
         // Reload data when perPage changes (but not on initial mount)
         if (oldVal !== undefined && newVal !== oldVal && this.content.userId) {
+          this.currentPage = 1; // Reset to first page
           this.loadData();
         }
       },
@@ -193,10 +220,14 @@ export default {
           params.append('per_page', String(this.content.perPage));
         }
 
+        // Page number (optional, default: 1)
+        params.append('page', String(this.currentPage));
+
         console.log('API Call Parameters:', {
           user_id: this.content.userId,
           period: period,
-          per_page: this.content.perPage || 'default (25)'
+          per_page: this.content.perPage || 'default (25)',
+          page: this.currentPage
         });
 
         const url = `https://xv05-su7k-rvc8.f2.xano.io/api:6iYtDb6K/history/filtered?${params.toString()}`;
@@ -225,9 +256,12 @@ export default {
         // API returns object with entries array, not direct array
         if (data && data.entries && Array.isArray(data.entries)) {
           this.entries = data.entries;
+          this.pagination = data.pagination || null;
           console.log('Loaded entries:', data.entries.length, 'Period:', data.period_label);
+          console.log('Pagination:', this.pagination);
         } else {
           this.entries = [];
+          this.pagination = null;
           console.warn('Unexpected API response format:', data);
         }
       } catch (err) {
@@ -237,6 +271,7 @@ export default {
       }
     },
     applyFilter() {
+      this.currentPage = 1; // Reset to first page when applying filter
       this.loadData();
     },
     clearFilter() {
@@ -244,6 +279,24 @@ export default {
       this.localPeriod = 'week';
       this.currentPage = 1;
       this.loadData();
+    },
+    goToPage(page) {
+      if (page >= 1 && this.pagination) {
+        this.currentPage = page;
+        this.loadData();
+      }
+    },
+    nextPage() {
+      if (this.pagination?.nextPage) {
+        this.currentPage = this.pagination.nextPage;
+        this.loadData();
+      }
+    },
+    prevPage() {
+      if (this.pagination?.prevPage) {
+        this.currentPage = this.pagination.prevPage;
+        this.loadData();
+      }
     },
     formatDate(timestamp) {
       if (!timestamp) return '-';
@@ -508,6 +561,63 @@ export default {
   color: #333;
 }
 
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-top: 1px solid #e0e0e0;
+  background: #fafafa;
+}
+
+.pagination-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.pagination-button:hover:not(:disabled) {
+  background: #45a049;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.pagination-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.pagination-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.page-number {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.items-info {
+  font-size: 13px;
+  color: #666;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .filter-grid {
@@ -537,6 +647,21 @@ export default {
   .history-table th,
   .history-table td {
     padding: 12px 16px;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .pagination-button {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .pagination-info {
+    order: -1;
   }
 }
 </style>
