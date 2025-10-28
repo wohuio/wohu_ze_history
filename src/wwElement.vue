@@ -223,18 +223,24 @@ export default {
         // Page number (optional, default: 1)
         params.append('page', String(this.currentPage));
 
+        // Reference date (optional) - if not provided, API uses current date
+        // Format: ISO 8601 date string or timestamp
+        // params.append('reference_date', new Date().toISOString());
+
         console.log('API Call Parameters:', {
           user_id: this.content.userId,
           period: period,
-          per_page: this.content.perPage || 'default (25)',
+          per_page: this.content.perPage || 100,
           page: this.currentPage
         });
 
         const url = `https://xv05-su7k-rvc8.f2.xano.io/api:if8X12tw/history/filtered?${params.toString()}`;
 
-        console.log('Fetching filtered history from:', url);
+        console.log('Fetching filtered history (GET):', url);
 
-        const response = await fetch(url);
+        const response = await fetch(url, {
+          method: 'GET'
+        });
 
         if (!response.ok) {
           // Try to get error details from response
