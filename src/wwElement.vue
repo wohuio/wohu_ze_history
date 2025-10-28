@@ -253,11 +253,21 @@ export default {
 
         const data = await response.json();
 
-        // API returns object with entries array, not direct array
-        if (data && data.entries && Array.isArray(data.entries)) {
-          this.entries = data.entries;
-          this.pagination = data.pagination || null;
-          console.log('Loaded entries:', data.entries.length, 'Period:', data.period_label);
+        console.log('Full API Response:', data);
+
+        // API returns object with items array (not entries)
+        if (data && data.items && Array.isArray(data.items)) {
+          this.entries = data.items;
+          // Build pagination from response data
+          this.pagination = {
+            curPage: data.curPage || 1,
+            nextPage: data.nextPage || null,
+            prevPage: data.prevPage || null,
+            itemsReceived: data.itemsReceived || 0,
+            itemsTotal: data.itemsTotal || 0,
+            pageTotal: data.pageTotal || 0,
+          };
+          console.log('Loaded entries:', data.items.length, 'Period:', data.period_label);
           console.log('Pagination:', this.pagination);
         } else {
           this.entries = [];
