@@ -38,6 +38,23 @@
 
     <!-- Table -->
     <div v-else-if="entries.length > 0" class="table-container">
+      <!-- Period Display Header -->
+      <div class="period-header">
+        <div v-if="localPeriod === 'day'" class="period-display">
+          <div class="period-title">{{ formatPeriodDate(periodStart) }}</div>
+        </div>
+        <div v-else-if="localPeriod === 'week'" class="period-display">
+          <div class="period-title">KW {{ getWeekNumber(periodStart) }}</div>
+          <div class="period-subtitle">{{ formatDateRange(periodStart, periodEnd) }}</div>
+        </div>
+        <div v-else-if="localPeriod === 'month'" class="period-display">
+          <div class="period-title">{{ formatMonthYear(periodStart) }}</div>
+        </div>
+        <div v-else-if="localPeriod === 'year'" class="period-display">
+          <div class="period-title">{{ formatYear(periodStart) }}</div>
+        </div>
+      </div>
+
       <div class="table-header">
         <h3>{{ entries.length }} Einträge gefunden</h3>
         <button @click="loadData" class="refresh-button" :disabled="loading">
@@ -129,6 +146,8 @@ export default {
       localPeriod: 'week',
       currentPage: 1,
       pagination: null, // Stores pagination info from API
+      periodStart: null, // Period start timestamp from API
+      periodEnd: null, // Period end timestamp from API
     };
   },
   computed: {
@@ -273,11 +292,17 @@ export default {
             itemsTotal: data.itemsTotal || 0,
             pageTotal: data.pageTotal || 0,
           };
+          // Store period information for display
+          this.periodStart = data.period_start || null;
+          this.periodEnd = data.period_end || null;
+
           console.log('Loaded entries:', data.items.length, 'Period:', data.period_label);
           console.log('Pagination:', this.pagination);
         } else {
           this.entries = [];
           this.pagination = null;
+          this.periodStart = null;
+          this.periodEnd = null;
           console.warn('Unexpected API response format:', data);
         }
       } catch (err) {
@@ -340,6 +365,65 @@ export default {
       const hours = Math.floor(minutes / 60);
       const mins = minutes % 60;
       return `${hours}h ${mins}m`;
+    },
+    formatPeriodDate(timestamp) {
+      if (!timestamp) return '';
+      const ts = parseInt(timestamp);
+      const msTimestamp = ts < 10000000000 ? ts * 1000 : ts;
+      return new Date(msTimestamp).toLocaleDateString('de-DE', {
+        weekday: 'long',
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      });
+    },
+    formatDateRange(startTimestamp, endTimestamp) {
+      if (!startTimestamp) return '';
+      const startTs = parseInt(startTimestamp);
+      const startMs = startTs < 10000000000 ? startTs * 1000 : startTs;
+      const startDate = new Date(startMs);
+
+      let endDate;
+      if (endTimestamp && parseInt(endTimestamp) > 0) {
+        const endTs = parseInt(endTimestamp);
+        const endMs = endTs < 10000000000 ? endTs * 1000 : endTs;
+        endDate = new Date(endMs);
+      } else {
+        // If no end date, calculate end of week (Sunday)
+        endDate = new Date(startMs);
+        endDate.setDate(startDate.getDate() + 6);
+      }
+
+      const formatOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
+      return `${startDate.toLocaleDateString('de-DE', formatOptions)} - ${endDate.toLocaleDateString('de-DE', formatOptions)}`;
+    },
+    formatMonthYear(timestamp) {
+      if (!timestamp) return '';
+      const ts = parseInt(timestamp);
+      const msTimestamp = ts < 10000000000 ? ts * 1000 : ts;
+      return new Date(msTimestamp).toLocaleDateString('de-DE', {
+        month: 'long',
+        year: 'numeric',
+      });
+    },
+    formatYear(timestamp) {
+      if (!timestamp) return '';
+      const ts = parseInt(timestamp);
+      const msTimestamp = ts < 10000000000 ? ts * 1000 : ts;
+      return new Date(msTimestamp).getFullYear().toString();
+    },
+    getWeekNumber(timestamp) {
+      if (!timestamp) return '';
+      const ts = parseInt(timestamp);
+      const msTimestamp = ts < 10000000000 ? ts * 1000 : ts;
+      const date = new Date(msTimestamp);
+
+      // ISO 8601 week number calculation
+      const tempDate = new Date(date.getTime());
+      tempDate.setHours(0, 0, 0, 0);
+      tempDate.setDate(tempDate.getDate() + 3 - ((tempDate.getDay() + 6) % 7));
+      const week1 = new Date(tempDate.getFullYear(), 0, 4);
+      return 1 + Math.round(((tempDate.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
     },
   },
 };
@@ -489,6 +573,33 @@ export default {
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+}
+
+/* Period Header */
+.period-header {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  padding: 24px;
+  text-align: center;
+  color: white;
+}
+
+.period-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.period-title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.period-subtitle {
+  font-size: 14px;
+  font-weight: 400;
+  opacity: 0.9;
 }
 
 .table-header {
