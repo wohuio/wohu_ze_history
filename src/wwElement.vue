@@ -6,12 +6,21 @@
       <div class="filter-grid">
         <div class="filter-item">
           <label>Zeitraum</label>
-          <select v-model="localPeriod" class="filter-input">
-            <option value="day">Tag</option>
-            <option value="week">Woche</option>
-            <option value="month">Monat</option>
-            <option value="year">Jahr</option>
+          <select v-model="localPeriod" class="filter-select">
+            <option value="day">📅 Tag</option>
+            <option value="week">📆 Woche</option>
+            <option value="month">🗓️ Monat</option>
+            <option value="year">📊 Jahr</option>
           </select>
+        </div>
+        <div class="filter-item">
+          <label>Datum auswählen (optional)</label>
+          <input
+            type="date"
+            v-model="referenceDate"
+            class="filter-date-input"
+            @change="onDateChange"
+          >
         </div>
         <div class="filter-item filter-actions">
           <button @click="applyFilter" class="filter-button" :disabled="loading || !content.userId">
@@ -144,6 +153,7 @@ export default {
       error: null,
       localUserId: null,
       localPeriod: 'week',
+      referenceDate: '', // Selected reference date (YYYY-MM-DD format)
       currentPage: 1,
       pagination: null, // Stores pagination info from API
       periodStart: null, // Period start timestamp from API
@@ -243,14 +253,18 @@ export default {
         params.append('page', String(this.currentPage));
 
         // Reference date (optional) - if not provided, API uses current date
-        // Format: ISO 8601 date string or timestamp
-        // params.append('reference_date', new Date().toISOString());
+        if (this.referenceDate) {
+          // Convert YYYY-MM-DD to ISO timestamp
+          const refDate = new Date(this.referenceDate);
+          params.append('reference_date', refDate.toISOString());
+        }
 
         console.log('API Call Parameters:', {
           user_id: this.content.userId,
           period: period,
           per_page: this.content.perPage || 100,
-          page: this.currentPage
+          page: this.currentPage,
+          reference_date: this.referenceDate || 'current date'
         });
 
         const url = `https://xv05-su7k-rvc8.f2.xano.io/api:if8X12tw/history/filtered?${params.toString()}`;
@@ -318,6 +332,12 @@ export default {
     clearFilter() {
       // Reset to defaults
       this.localPeriod = 'week';
+      this.referenceDate = '';
+      this.currentPage = 1;
+      this.loadData();
+    },
+    onDateChange() {
+      // When date changes, automatically apply filter
       this.currentPage = 1;
       this.loadData();
     },
@@ -453,7 +473,7 @@ export default {
 
 .filter-grid {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 200px 220px auto;
   gap: 16px;
   align-items: end;
 }
@@ -470,17 +490,39 @@ export default {
   color: #666;
 }
 
-.filter-input {
+.filter-select,
+.filter-date-input {
   padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
   font-size: 14px;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
+  background: white;
+  cursor: pointer;
 }
 
-.filter-input:focus {
+.filter-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.filter-select:hover,
+.filter-date-input:hover {
+  border-color: #4CAF50;
+}
+
+.filter-select:focus,
+.filter-date-input:focus {
   outline: none;
   border-color: #4CAF50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+.filter-date-input {
+  font-family: inherit;
 }
 
 .filter-actions {
@@ -751,9 +793,19 @@ export default {
     grid-template-columns: 1fr;
   }
 
+  .filter-select,
+  .filter-date-input {
+    width: 100%;
+  }
+
   .filter-actions {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .filter-button,
+  .clear-button {
+    width: 100%;
   }
 
   .table-header {
