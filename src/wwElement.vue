@@ -230,7 +230,7 @@ export default {
           page: this.currentPage
         });
 
-        const url = `https://xv05-su7k-rvc8.f2.xano.io/api:6iYtDb6K/history/filtered?${params.toString()}`;
+        const url = `https://xv05-su7k-rvc8.f2.xano.io/api:if8X12tw/history/filtered?${params.toString()}`;
 
         console.log('Fetching filtered history from:', url);
 
